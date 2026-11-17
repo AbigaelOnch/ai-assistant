@@ -132,7 +132,7 @@ def cmd_connect():
     tools = load_tools(ENABLED_TOOLS)
     skipped = set(ENABLED_TOOLS) - available_sources(ENABLED_TOOLS)
     if skipped:
-        print(f"Skipping {', '.join(sorted(skipped))}: these only work on a Mac.")
+        print(f"Skipping {', '.join(sorted(skipped))}: Mac-only, or not set up yet (Outlook needs MS_CLIENT_ID in .env).")
     checks = {
         "gmail": ("search_gmail", {"query": "newer_than:1d", "max_results": 1}),
         "outlook": ("search_outlook", {"max_results": 1}),

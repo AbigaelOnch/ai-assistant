@@ -47,7 +47,11 @@ MAC_ONLY = {"notes", "imessage"}
 def available_sources(enabled: set[str]) -> set[str]:
     """Drop Mac-only sources (Apple Notes, iMessage) on Windows/Linux."""
     import sys
-    return set(enabled) if sys.platform == "darwin" else set(enabled) - MAC_ONLY
+    from ..config import MS_CLIENT_ID
+    sources = set(enabled) if sys.platform == "darwin" else set(enabled) - MAC_ONLY
+    if not MS_CLIENT_ID:  # Outlook isn't set up yet
+        sources.discard("outlook")
+    return sources
 
 
 def load_tools(enabled: set[str]) -> dict[str, Tool]:
