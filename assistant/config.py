@@ -4,7 +4,42 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parent.parent
-load_dotenv(ROOT / ".env")
+ENV_FILE = ROOT / ".env"
+# override=True: values in .env win over any (possibly empty) variables
+# already set in the Windows/macOS environment.
+load_dotenv(ENV_FILE, override=True, encoding="utf-8-sig")
+
+
+def api_key_problem() -> str | None:
+    """Explain what's wrong with the API key setup, without revealing the key."""
+    if not ENV_FILE.exists():
+        names = [p.name for p in ROOT.glob(".env*")]
+        return (f"No .env file found in {ROOT}. Files starting with .env here: {names}. "
+                "If you see '.env.txt', rename it to '.env'.")
+    lines = ENV_FILE.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+    key_lines = [i + 1 for i, l in enumerate(lines)
+                 if l.strip().lstrip("#").strip().startswith("ANTHROPIC_API_KEY")]
+    active = [i + 1 for i, l in enumerate(lines) if l.strip().startswith("ANTHROPIC_API_KEY")]
+    key = os.getenv("ANTHROPIC_API_KEY", "").strip().strip('"').strip("'")
+    loose = [i + 1 for i, l in enumerate(lines) if "sk-ant-" in l and "=" not in l]
+    where = f"(.env lines mentioning ANTHROPIC_API_KEY: {key_lines or 'none'})"
+    if loose:
+        return (f"Found what looks like a key on line(s) {loose} of .env, but not after "
+                f"'ANTHROPIC_API_KEY='. Put it on that line instead, e.g. "
+                f"ANTHROPIC_API_KEY=sk-ant-api03-... {where}")
+    if not key:
+        return f"ANTHROPIC_API_KEY is empty. {where}"
+    if key == "sk-ant-..." or "..." in key:
+        return (f"ANTHROPIC_API_KEY is still the placeholder 'sk-ant-...'. Replace the whole "
+                f"placeholder with your key. {where}")
+    if not key.startswith("sk-ant-"):
+        return (f"ANTHROPIC_API_KEY doesn't start with 'sk-ant-' (starts with "
+                f"'{key[:3]}…', {len(key)} characters). {where}")
+    if " " in key:
+        return f"ANTHROPIC_API_KEY contains a space. {where}"
+    if len(active) > 1:
+        print(f"Note: ANTHROPIC_API_KEY appears on several lines {active}; the last one is used.")
+    return None
 
 
 def _path(name: str, default: str) -> Path:

@@ -127,8 +127,17 @@ if __name__ == "__main__":
     for stream in (sys.stdout, sys.stderr):  # Windows consoles default to cp1252
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
-    cmd =sys.argv[1] if len(sys.argv) > 1 else "chat"
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "chat"
     if cmd not in COMMANDS:
         print(__doc__)
         sys.exit(1)
+    if cmd in ("run", "chat"):
+        from .config import api_key_problem
+        problem = api_key_problem()
+        if problem:
+            print("Claude API key problem: " + problem)
+            sys.exit(1)
+        import os
+        k = os.environ["ANTHROPIC_API_KEY"]
+        print(f"API key loaded ({k[:10]}…{k[-4:]}, {len(k)} characters).")
     COMMANDS[cmd]()
