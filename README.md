@@ -36,7 +36,12 @@ LinkedIn, Apple Notes and iMessage**, then works on your behalf:
 ## Running on Windows
 Gmail, Outlook, LinkedIn and the task list work the same on Windows. Apple Notes and
 iMessage are Mac-only and are skipped. The brief is saved to `data\briefs\` instead.
-In PowerShell:
+
+**Easiest:** double-click `setup_windows.bat` once (creates the environment, installs
+packages, opens `.env` for your API key), then double-click `run_windows.bat` to chat.
+`run_windows.bat run`, `approvals` or `connect` run the other commands.
+
+Or by hand in PowerShell:
 ```powershell
 cd $HOME\Documents\ai-assistant
 python -m venv .venv            # Microsoft Store Python uses "python", not "py"
