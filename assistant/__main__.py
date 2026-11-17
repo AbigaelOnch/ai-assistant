@@ -14,6 +14,28 @@ from . import db
 from .config import ENABLED_TOOLS, LOOKBACK_HOURS
 
 
+def explain_error(e: Exception) -> str:
+    """Turn API errors into one readable line instead of a traceback."""
+    import anthropic
+    msg = getattr(e, "message", None) or str(e)
+    if isinstance(e, anthropic.APIStatusError):
+        try:
+            msg = e.body["error"]["message"]
+        except Exception:
+            pass
+        if "credit balance" in msg:
+            return ("⚠️  Your Anthropic API account is out of credit. Add credit at "
+                    "https://console.anthropic.com/settings/billing, then try again.")
+        if e.status_code == 401:
+            return "⚠️  The API key was rejected. Create a new key and paste it into .env."
+        if e.status_code == 404 and "model" in msg:
+            return f"⚠️  Model not available to your account: {msg}. Change ASSISTANT_MODEL in .env."
+        return f"⚠️  Claude API error {e.status_code}: {msg}"
+    if isinstance(e, anthropic.APIConnectionError):
+        return "⚠️  Couldn't reach the Claude API. Check your internet connection."
+    return f"⚠️  {type(e).__name__}: {msg}"
+
+
 def cmd_run():
     from .agent import Agent
     from .config import DATA_DIR
@@ -32,7 +54,11 @@ def cmd_run():
               "to my task list, save draft replies where a reply is clearly needed, queue "
               f"anything that needs my approval, then write today's brief and {save}.")
     print(f"[{datetime.now():%H:%M}] Running check ({', '.join(sorted(sources))})…")
-    brief = Agent().ask(prompt)
+    try:
+        brief = Agent().ask(prompt)
+    except Exception as e:
+        print(explain_error(e))
+        sys.exit(1)
     db.log_run(brief)
     briefs = DATA_DIR / "briefs"
     briefs.mkdir(exist_ok=True)
@@ -61,7 +87,11 @@ def cmd_chat():
             print()
             return
         if text:
-            print("\nassistant › " + agent.ask(text))
+            try:
+                print("\nassistant › " + agent.ask(text))
+            except Exception as e:
+                agent.messages.clear()  # drop the half-finished turn
+                print("\n" + explain_error(e))
 
 
 def cmd_approvals():
