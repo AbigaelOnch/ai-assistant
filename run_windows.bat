@@ -5,7 +5,7 @@ if not exist ".venv\Scripts\python.exe" (
   echo Run setup_windows.bat first.
   pause & exit /b 1
 )
-findstr /r /c:"^ANTHROPIC_API_KEY=sk-ant-..." .env >nul 2>nul && (
+findstr /x /l /c:"ANTHROPIC_API_KEY=sk-ant-..." .env >nul 2>nul && (
   echo Your Claude API key isn't set yet. Opening .env - paste it after ANTHROPIC_API_KEY= and save.
   notepad .env
 )
