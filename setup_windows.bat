@@ -22,7 +22,11 @@ echo Installing packages (takes a minute or two)...
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt --quiet || goto :fail
 
 if not exist secrets mkdir secrets
-if not exist .env copy .env.example .env >nul
+set NEWENV=0
+if not exist .env (
+  copy .env.example .env >nul
+  set NEWENV=1
+)
 
 echo.
 echo ==========================================================
@@ -37,9 +41,9 @@ echo  Gmail and Outlook need one-time sign-in setup - see the
 echo  README sections "Connect Gmail" and "Connect Outlook".
 echo  Until then the assistant runs without them.
 echo.
-echo  Then double-click run_windows.bat to start the assistant.
+echo  Then double-click Assistant.bat to open the assistant.
 echo ==========================================================
-notepad .env
+if "%NEWENV%"=="1" notepad .env
 pause
 exit /b 0
 

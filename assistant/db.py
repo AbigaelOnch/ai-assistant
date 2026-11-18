@@ -76,3 +76,21 @@ def last_run_time() -> str | None:
     with connect() as c:
         row = c.execute("SELECT started_at FROM runs ORDER BY id DESC LIMIT 1").fetchone()
         return row["started_at"] if row else None
+
+
+def get_approval(approval_id: int):
+    with connect() as c:
+        return c.execute("SELECT * FROM approvals WHERE id=?", (approval_id,)).fetchone()
+
+
+def recent_approvals(limit: int = 15) -> list[sqlite3.Row]:
+    with connect() as c:
+        return c.execute("SELECT * FROM approvals WHERE status!='pending' "
+                         "ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
+
+
+def claim_approval(approval_id: int) -> bool:
+    """Atomically move pending -> sending. False if someone already took it."""
+    with connect() as c:
+        return c.execute("UPDATE approvals SET status='sending' WHERE id=? AND status='pending'",
+                         (approval_id,)).rowcount == 1

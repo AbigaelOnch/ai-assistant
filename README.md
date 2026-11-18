@@ -21,6 +21,20 @@ LinkedIn, Apple Notes and iMessage**, then works on your behalf:
    anything that sends ──► approval queue ──► you approve / deny
 ```
 
+## Use it in your browser (no terminal)
+```
+python -m assistant ui          # Windows: double-click Assistant.bat
+```
+Opens the assistant at `http://127.0.0.1:8765` in your browser:
+- **Chat** with live progress while it works, and **Check now** to go through everything new
+- **Waiting for you**: every email or message it wants to send, editable, with *Approve and send* / *Don't send*
+- **Tasks**: action items it found, plus your own, with due dates
+- **Briefs**: every saved check
+- **About you**: edit `profile.md` (who matters, what to ignore, your writing style)
+
+It listens only on your own computer. Other websites can't talk to it (see ARCHITECTURE.md, section 8).
+Use **Quit assistant** in the sidebar to stop it. Scheduled checks keep running either way.
+
 ## How safety works
 
 - **Drafts are free; sends need approval.** Tools that send (`send_gmail`,
@@ -38,7 +52,8 @@ Gmail, Outlook, LinkedIn and the task list work the same on Windows. Apple Notes
 iMessage are Mac-only and are skipped. The brief is saved to `data\briefs\` instead.
 
 **Easiest:** double-click `setup_windows.bat` once (creates the environment, installs
-packages, opens `.env` for your API key), then double-click `run_windows.bat` to chat. Double-click `connect_windows.bat` to sign in to Gmail (and Outlook once set up).
+packages, opens `.env` for your API key), then double-click `Assistant.bat` to open the
+browser interface (or `run_windows.bat` for the text chat). Double-click `connect_windows.bat` to sign in to Gmail (and Outlook once set up).
 `run_windows.bat run`, `approvals` or `connect` run the other commands.
 
 Or by hand in PowerShell:
@@ -154,7 +169,10 @@ to a smaller model such as `claude-haiku-5-5`.
 ## Project layout
 ```
 assistant/
-  __main__.py      CLI: run, chat, approvals, tasks, connect
+  __main__.py      CLI: ui, run, chat, approvals, tasks, connect
+  web.py + ui.html local web interface (Flask, 127.0.0.1 only)
+  checks.py        the regular check, shared by CLI, schedule and web
+  errors.py        plain-language API error messages
   agent.py         Claude tool-use loop + system prompt + approval gate
   db.py            SQLite: tasks, approval queue, run log
   config.py        settings from .env

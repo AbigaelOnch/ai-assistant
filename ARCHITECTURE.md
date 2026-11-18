@@ -68,7 +68,9 @@ media, multi-user or hosted (cloud) deployment.
 
 | Component | File | Responsibility |
 |---|---|---|
-| CLI | `assistant/__main__.py` | `run`, `chat`, `approvals`, `tasks`, `connect` commands |
+| CLI | `assistant/__main__.py` | `ui`, `run`, `chat`, `approvals`, `tasks`, `connect` commands |
+| Web UI | `assistant/web.py`, `assistant/ui.html` | Local Flask server + single-page app: chat with live progress, approvals queue (editable), tasks, briefs, profile editor |
+| Regular check | `assistant/checks.py` | One triage pass shared by the CLI, scheduler and UI |
 | Agent loop | `assistant/agent.py` | Builds the system prompt, calls Claude, executes tool calls, enforces the approval gate |
 | Tool registry | `assistant/tools/__init__.py` | `@tool` decorator, JSON schemas, per-platform source filtering |
 | Gmail | `tools/gmail.py` | Search, read, draft reply, send (approval), mark read |
@@ -165,6 +167,29 @@ are filtered out in `available_sources()`, and the brief is written to `data/bri
 stored as plaintext files (consider the OS keychain); the attributedBody
 decoder is best-effort.
 
+### Web UI (local)
+`python -m assistant ui` starts a Flask server on `127.0.0.1:8765` (next free port if busy) and opens the
+browser. The page is one self-contained HTML file; there are no external assets or CDNs.
+
+- **Jobs:** chat and checks run on a background thread, one at a time (a lock returns HTTP 409 if busy).
+  The page polls `/api/jobs/<id>`, which lists the `tool` and `queued` events the agent emits, and shows them as live progress.
+- **Approvals:** in the UI the agent always *queues* sends (no inline prompt). The card shows the full text;
+  only `subject`, `body` and `text` can be edited before approving, and the recipient can't. Approving
+  atomically claims the row (`pending → sending`), so a double-click can't send twice.
+- **Transcript:** kept in memory so a page reload restores the conversation; **Quit assistant** stops the server.
+
+**Why a local web server needs its own protections.** Any website open in your browser can send requests to
+`localhost`. Because this server can read mail and approve sends, `web.py` enforces:
+
+| Threat | Defense |
+|---|---|
+| A malicious site calls the API | Every `/api/*` call needs a random per-start token, embedded only in the served page. Other origins can't read that page (same-origin policy). Constant-time comparison. |
+| DNS rebinding (attacker domain resolves to 127.0.0.1) | `Host` header must be `localhost` or `127.0.0.1`, otherwise 403 |
+| Cross-site POST | `Origin` on non-GET requests must be local |
+| Clickjacking | `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'` |
+| Script injection from email text | Page renders model output with escape-first markdown; links are shown as plain text; CSP `default-src 'none'` with only inline script/style and same-origin fetch |
+| Path traversal in brief names | Names must match `[\w-]+\.md` |
+
 ## 9. Operations
 
 - **Install:** venv + `pip install -r requirements.txt`, fill `.env`, `connect`.
@@ -187,7 +212,7 @@ Then import it in `load_tools()` and add the group to `ENABLED_TOOLS`.
 
 1. **Calendar** (Google Calendar / Graph `Calendars.ReadWrite`): meeting
    triage, propose times, accept/decline gated.
-2. **Approvals from your phone**: push the queue to Slack or Telegram, or as an email digest
+2. **Approvals from your phone** (the web UI is local-only today): push the queue to Slack or Telegram, or as an email digest
    with approve links (needs a small authenticated endpoint).
 3. **Memory**: store facts learned over time (people, preferences) alongside `profile.md`.
 4. **Keychain secrets**: use the OS keychain (macOS Keychain, Windows Credential Manager).

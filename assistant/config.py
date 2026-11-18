@@ -12,11 +12,14 @@ load_dotenv(ENV_FILE, override=True, encoding="utf-8-sig")
 
 def api_key_problem() -> str | None:
     """Explain what's wrong with the API key setup, without revealing the key."""
-    if not ENV_FILE.exists():
+    if ENV_FILE.exists():
+        lines = ENV_FILE.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+    elif os.getenv("ANTHROPIC_API_KEY"):
+        lines = []  # key set as a real environment variable instead
+    else:
         names = [p.name for p in ROOT.glob(".env*")]
         return (f"No .env file found in {ROOT}. Files starting with .env here: {names}. "
                 "If you see '.env.txt', rename it to '.env'.")
-    lines = ENV_FILE.read_text(encoding="utf-8-sig", errors="replace").splitlines()
     key_lines = [i + 1 for i, l in enumerate(lines)
                  if l.strip().lstrip("#").strip().startswith("ANTHROPIC_API_KEY")]
     active = [i + 1 for i, l in enumerate(lines) if l.strip().startswith("ANTHROPIC_API_KEY")]

@@ -5,65 +5,26 @@
   python -m assistant approvals   review and approve/deny queued actions
   python -m assistant tasks       show your task list
   python -m assistant connect     sign in to Gmail / Outlook and test each source
+  python -m assistant ui          open the assistant in your browser (no terminal needed)
 """
 import json
 import sys
 from datetime import datetime
 
 from . import db
-from .config import ENABLED_TOOLS, LOOKBACK_HOURS
-
-
-def explain_error(e: Exception) -> str:
-    """Turn API errors into one readable line instead of a traceback."""
-    import anthropic
-    msg = getattr(e, "message", None) or str(e)
-    if isinstance(e, anthropic.APIStatusError):
-        try:
-            msg = e.body["error"]["message"]
-        except Exception:
-            pass
-        if "credit balance" in msg:
-            return ("⚠️  Your Anthropic API account is out of credit. Add credit at "
-                    "https://console.anthropic.com/settings/billing, then try again.")
-        if e.status_code == 401:
-            return "⚠️  The API key was rejected. Create a new key and paste it into .env."
-        if e.status_code == 404 and "model" in msg:
-            return f"⚠️  Model not available to your account: {msg}. Change ASSISTANT_MODEL in .env."
-        return f"⚠️  Claude API error {e.status_code}: {msg}"
-    if isinstance(e, anthropic.APIConnectionError):
-        return "⚠️  Couldn't reach the Claude API. Check your internet connection."
-    return f"⚠️  {type(e).__name__}: {msg}"
+from .config import ENABLED_TOOLS
 
 
 def cmd_run():
-    from .agent import Agent
-    from .config import DATA_DIR
+    from .checks import run_check
+    from .errors import explain_error
     from .tools import available_sources
-    sources = available_sources(ENABLED_TOOLS)
-    names = {"gmail": "Gmail (unread / important)", "outlook": "Outlook (unread / important)",
-             "linkedin": "LinkedIn activity", "notes": "Apple Notes I've changed",
-             "imessage": "iMessages"}
-    checks = ", ".join(v for k, v in names.items() if k in sources)
-    last = db.last_run_time()
-    window = f"since {last}" if last else f"in the last {LOOKBACK_HOURS} hours"
-    title = f"Brief — {datetime.now():%a %b %d, %H:%M}"
-    save = (f"save it as an Apple Note titled '{title}' in a folder named 'Assistant'"
-            if "notes" in sources else "reply with it in full (it will be saved to a file)")
-    prompt = (f"Do my regular check of everything new {window}: {checks}. Add action items "
-              "to my task list, save draft replies where a reply is clearly needed, queue "
-              f"anything that needs my approval, then write today's brief and {save}.")
-    print(f"[{datetime.now():%H:%M}] Running check ({', '.join(sorted(sources))})…")
+    print(f"[{datetime.now():%H:%M}] Running check ({', '.join(sorted(available_sources(ENABLED_TOOLS)))})…")
     try:
-        brief = Agent().ask(prompt)
+        brief, path = run_check()
     except Exception as e:
-        print(explain_error(e))
+        print("⚠️  " + explain_error(e))
         sys.exit(1)
-    db.log_run(brief)
-    briefs = DATA_DIR / "briefs"
-    briefs.mkdir(exist_ok=True)
-    path = briefs / f"{datetime.now():%Y-%m-%d_%H%M}.md"
-    path.write_text(f"# {title}\n\n{brief}\n", encoding="utf-8")
     print("\n" + brief + f"\n\n(Saved to {path})")
 
 
@@ -90,8 +51,9 @@ def cmd_chat():
             try:
                 print("\nassistant › " + agent.ask(text))
             except Exception as e:
+                from .errors import explain_error
                 agent.messages.clear()  # drop the half-finished turn
-                print("\n" + explain_error(e))
+                print("\n⚠️  " + explain_error(e))
 
 
 def cmd_approvals():
@@ -150,7 +112,19 @@ def cmd_connect():
             print(f"✗ {type(e).__name__}: {e}")
 
 
-COMMANDS = {"run": cmd_run, "chat": cmd_chat, "approvals": cmd_approvals,
+def cmd_ui():
+    try:
+        from .web import serve
+        serve()
+    except Exception:  # started without a console: leave a trace you can read
+        import traceback
+        from .config import DATA_DIR
+        with open(DATA_DIR / "ui.log", "a", encoding="utf-8") as f:
+            traceback.print_exc(file=f)
+        raise
+
+
+COMMANDS = {"ui": cmd_ui, "run": cmd_run, "chat": cmd_chat, "approvals": cmd_approvals,
             "tasks": cmd_tasks, "connect": cmd_connect}
 
 if __name__ == "__main__":
