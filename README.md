@@ -103,6 +103,14 @@ The window has a **Today** page (what needs you, at a glance) and pages for Mone
 
 **Privacy.** When you ask about these things in chat, or a check runs, the relevant records (spending categories, workouts, appointment details) are sent to the Claude API to answer you, just like your email is. Keep appointment reasons brief, and the assistant uses neutral titles on calendar events.
 
+## What it can't connect to (and why)
+
+- **iMessage and Apple Notes** only work when the assistant runs on a Mac. On Windows they are switched off automatically.
+- **WhatsApp** has no official way to read a personal account, and unofficial tools break WhatsApp's terms and can get your number banned. Forward messages to your email, or paste them into the ask box.
+- **Copilot Money** has no public connection yet, so spending comes from its CSV export (about once a week is enough). If Copilot gives you access to its official AI connection, it can replace the export.
+- **LinkedIn** is read through its notification emails in Gmail, not LinkedIn itself.
+- **Booking appointments:** the assistant finds times and prepares details, but you confirm every booking yourself.
+
 ## How safety works
 
 - **Drafts are free; sends need approval.** `send_gmail`, `send_gmail_reply`,
