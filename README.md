@@ -82,6 +82,20 @@ python -m assistant connect     sign in and test each source
 On Windows, `run_windows.bat` opens the text chat, and `run_windows.bat run`,
 `approvals` or `connect` run the other commands.
 
+## Money, health and appointments
+
+The window has a **Today** page (what needs you, at a glance) and pages for Money, Health and Appointments. Everything here is stored on your computer in `data/assistant.db`.
+
+**Budget alerts (Copilot).** Copilot has no public connection, so you bring the data: in Copilot go to Settings, Account, Export your transactions, then choose the file on the **Money** page (importing twice is safe). Set a monthly limit next to any category. You get alerts when you're close to or over a limit, when eating out or shopping runs well above your recent months, and when you've ordered out a lot in a week (default 5 times; ask in chat to change it). Alerts are only as fresh as your last export, and the assistant tells you when the data is getting old.
+
+**Eating habits.** Eating out vs groceries is worked out from Copilot's categories and delivery apps (say "count Coffee as eating out" in chat to change how a category is treated). A big drop in food spending, or very few logged meals, produces a gentle check-in, never calorie or weight numbers. Logging meals is optional.
+
+**Workouts and goals.** Set goals on the **Health** page (for example 4 workouts a week), log workouts there or in chat ("ran 3 miles"), or import Apple Health: on your iPhone open Health, tap your picture, Export All Health Data, send the zip to your PC, and choose it on the Health page. Only workouts are read.
+
+**Appointments (doctor, beauty).** The assistant keeps the list, finds free times on your Google Calendar, and prepares what you need (provider, preferred times, booking link). **It never books for you.** You make the booking on the provider's site or by phone, then press "I booked it". To let it see your calendar, double-click `connect_calendar_windows.bat` once. Adding an event to your calendar goes through the same approval step as sending email.
+
+**Privacy.** When you ask about these things in chat, or a check runs, the relevant records (spending categories, workouts, appointment details) are sent to the Claude API to answer you, just like your email is. Keep appointment reasons brief, and the assistant uses neutral titles on calendar events.
+
 ## How safety works
 
 - **Drafts are free; sends need approval.** `send_gmail`, `send_gmail_reply`,
@@ -214,6 +228,8 @@ Then import the module in `assistant/tools/__init__.py → load_tools`, add its 
 additions: Google Calendar, Outlook Calendar (`Calendars.ReadWrite`), Todoist, Notion, Slack.
 
 ## Project layout
+
+(New: `assistant/life.py` holds the budget, habit and fitness logic and the alert rules; `tools/life.py` and `tools/calendar.py` expose them to Claude.)
 ```
 assistant/
   __main__.py      command line: ui, run, chat, approvals, tasks, connect

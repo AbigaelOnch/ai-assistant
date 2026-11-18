@@ -90,6 +90,11 @@ def cmd_tasks():
 
 
 def cmd_connect():
+    if len(sys.argv) > 2 and sys.argv[2] == "calendar":
+        from .tools.calendar import service
+        service()
+        print("Google Calendar connected.")
+        return
     from .tools import available_sources, load_tools
     tools = load_tools(ENABLED_TOOLS)
     skipped = set(ENABLED_TOOLS) - available_sources(ENABLED_TOOLS)

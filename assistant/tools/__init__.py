@@ -57,7 +57,9 @@ def available_sources(enabled: set[str]) -> set[str]:
 def load_tools(enabled: set[str]) -> dict[str, Tool]:
     enabled = available_sources(enabled)
     # Importing each module registers its tools.
-    from . import tasks  # noqa: F401  (always on)
+    from . import tasks, life  # noqa: F401  (always on)
+    if "gmail" in enabled or "calendar" in enabled:
+        from . import calendar  # noqa: F401
     if "gmail" in enabled or "linkedin" in enabled:
         from . import gmail  # noqa: F401
     if "linkedin" in enabled:
@@ -68,7 +70,9 @@ def load_tools(enabled: set[str]) -> dict[str, Tool]:
         from . import apple_notes  # noqa: F401
     if "imessage" in enabled:
         from . import imessage  # noqa: F401
-    groups = enabled | {"tasks"}
+    groups = enabled | {"tasks", "life"}
+    if "gmail" in enabled:
+        groups.add("calendar")  # same Google account; separate sign-in
     if "linkedin" in enabled and "gmail" not in enabled:
         # LinkedIn reads through Gmail, but don't expose general Gmail tools.
         groups.discard("gmail")

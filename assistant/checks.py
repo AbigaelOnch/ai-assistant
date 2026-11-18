@@ -25,7 +25,7 @@ def run_check(on_event: Callable[[dict], None] | None = None) -> tuple[str, Path
             if "notes" in sources else "reply with it in full (it is saved to a file for you)")
     prompt = (f"Do my regular check of everything new {window}: {checks}. Add action items "
               "to my task list, save draft replies where a reply is clearly needed, queue "
-              f"anything that needs my approval, then write today's brief and {save}.")
+              f"anything that needs my approval, call check_alerts and include anything it reports, then write today's brief and {save}.")
     brief = Agent(verbose=False, on_event=on_event).ask(prompt)
     db.log_run(brief)
     folder = DATA_DIR / "briefs"

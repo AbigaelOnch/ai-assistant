@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import secrets
+import shutil
 import sys
 import threading
 import urllib.request
@@ -23,7 +24,7 @@ from urllib.parse import urlparse
 
 from flask import Flask, Response, abort, jsonify, request
 
-from . import db
+from . import db, life
 from .config import (DATA_DIR, ENABLED_TOOLS, GMAIL_TOKEN_FILE, MODEL, PROFILE_PATH,
                      api_key_problem)
 from .errors import explain_error
@@ -45,8 +46,14 @@ def _row(r):
     return d
 
 
+def calendar_connected() -> bool:
+    return "gmail" in available_sources(ENABLED_TOOLS) and \
+        GMAIL_TOKEN_FILE.with_name("calendar_token.json").exists()
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.config["MAX_CONTENT_LENGTH"] = 4 * 1024**3  # Apple Health exports can be large
     token = secrets.token_urlsafe(32)
     lock = threading.Lock()  # one Claude request at a time
     S = {"agent": None, "tools": None, "jobs": {}, "transcript": [], "active": None}
@@ -322,7 +329,156 @@ def create_app() -> Flask:
             gmail_signed_in="gmail" in sources and GMAIL_TOKEN_FILE.exists(),
             gmail_needs_signin="gmail" in sources and not GMAIL_TOKEN_FILE.exists(),
             outlook="outlook" in sources, last_run=db.last_run_time(), busy=lock.locked(),
-            pending=len(db.pending_approvals()), open_tasks=open_tasks, due_tasks=due)
+            pending=len(db.pending_approvals()), open_tasks=open_tasks, due_tasks=due,
+            alerts=len(life.compute_alerts()), calendar=calendar_connected())
+
+    # ---- money, health, appointments ----------------------------------------
+    def body():
+        return request.get_json(silent=True) or {}
+
+    @app.get("/api/alerts")
+    def alerts():
+        return jsonify(alerts=life.compute_alerts())
+
+    @app.get("/api/budget")
+    def budget():
+        latest = life.latest_tx_date()
+        month = request.args.get("month") or (latest or date.today().isoformat())[:7]
+        if not re.fullmatch(r"\d{4}-\d{2}", month):
+            abort(400)
+        rows = life.spending_by_category(month)
+        groups = {}
+        ov = life.category_overrides()
+        for r in life._tx(*life.month_bounds(month)):
+            groups[r["grp"]] = groups.get(r["grp"], 0) + r["spend"]
+        return jsonify(month=month, latest=latest, rows=rows, categories=life.categories_seen(),
+                       groups={k: round(v, 2) for k, v in groups.items()})
+
+    @app.post("/api/budget/limit")
+    def budget_limit():
+        b = body()
+        cat = str(b.get("category", "")).strip()[:80]
+        if not cat:
+            return jsonify(error="Pick a category."), 400
+        try:
+            amt = float(b.get("monthly") or 0)
+        except ValueError:
+            return jsonify(error="Enter the limit as a number."), 400
+        return jsonify(message=life.set_limit(cat, amt))
+
+    @app.post("/api/import/<kind>")
+    def import_file(kind):
+        if kind not in ("transactions", "health"):
+            abort(404)
+        name = re.sub(r"[^\w .\-()]", "_", request.headers.get("X-Filename", "upload"))[-100:]
+        want = (".csv",) if kind == "transactions" else (".zip", ".xml")
+        if not name.lower().endswith(want):
+            return jsonify(error="Wrong kind of file. Choose " + " or ".join(want) + "."), 400
+        dest = life.IMPORT_DIR / name
+        with open(dest, "wb") as f:
+            shutil.copyfileobj(request.stream, f)
+        try:
+            if kind == "transactions":
+                r = life.import_transactions_csv(dest.read_text(encoding="utf-8-sig", errors="replace"))
+                msg = (f"Added {r['added']} transactions" +
+                       (f" ({r['already_had']} were already here)" if r["already_had"] else "") +
+                       f". Data now runs {r['first_date']} to {r['last_date']}.")
+            else:
+                r = life.import_apple_health(dest)
+                msg = f"Found {r['workouts_found']} workouts and added {r['added']} new ones."
+        except Exception as e:
+            return jsonify(error=str(e)), 400
+        return jsonify(message=msg)
+
+    @app.get("/api/health")
+    def health_data():
+        with db.connect() as c:
+            workouts = [dict(r) for r in c.execute("SELECT * FROM workouts ORDER BY day DESC, id DESC LIMIT 20")]
+            meals = [dict(r) for r in c.execute("SELECT * FROM meals ORDER BY day DESC, id DESC LIMIT 12")]
+        return jsonify(goals=life.goal_progress(), workouts=workouts, meals=meals)
+
+    @app.post("/api/goals")
+    def goals_add():
+        b = body()
+        title = str(b.get("title", "")).strip()[:100]
+        if not title or b.get("metric") not in ("workouts", "minutes", "distance_km") \
+                or b.get("period") not in ("week", "month"):
+            return jsonify(error="Fill in the goal name, what to count and the period."), 400
+        try:
+            target = float(b.get("target"))
+        except (TypeError, ValueError):
+            return jsonify(error="The target must be a number."), 400
+        with db.connect() as c:
+            c.execute("INSERT INTO goals(title,metric,target,period,created_at) VALUES(?,?,?,?,?)",
+                      (title, b["metric"], target, b["period"], db.now()))
+        return jsonify(ok=True)
+
+    @app.post("/api/goals/<int:gid>/remove")
+    def goals_remove(gid):
+        with db.connect() as c:
+            c.execute("UPDATE goals SET active=0 WHERE id=?", (gid,))
+        return jsonify(ok=True)
+
+    @app.post("/api/workouts")
+    def workouts_add():
+        b = body()
+        kind = str(b.get("kind", "")).strip()[:60]
+        if not kind:
+            return jsonify(error="Say what you did."), 400
+        try:
+            mins = float(b.get("minutes") or 0)
+            dist = float(b.get("distance") or 0)
+        except ValueError:
+            return jsonify(error="Minutes and distance must be numbers."), 400
+        if b.get("unit") == "mi":
+            dist *= 1.609344
+        life.log_workout(kind, mins, round(dist, 2), (b.get("day") or None))
+        return jsonify(ok=True)
+
+    @app.post("/api/meals")
+    def meals_add():
+        meal = str(body().get("meal", "")).strip()[:120]
+        if not meal:
+            return jsonify(error="Say what you ate."), 400
+        life.log_meal(meal)
+        return jsonify(ok=True)
+
+    @app.get("/api/appointments")
+    def appointments_get():
+        with db.connect() as c:
+            rows = [dict(r) for r in c.execute(
+                "SELECT * FROM appointments WHERE status IN ('to_book','booked') ORDER BY start='', start")]
+        return jsonify(appointments=rows, calendar=calendar_connected())
+
+    @app.post("/api/appointments")
+    def appointments_add():
+        b = body()
+        if b.get("kind") not in ("doctor", "dentist", "beauty", "other"):
+            return jsonify(error="Pick the kind of appointment."), 400
+        link = str(b.get("booking_link", "")).strip()
+        if link and not link.startswith("https://"):
+            return jsonify(error="The booking link should start with https://"), 400
+        start = str(b.get("start", "")).strip()
+        if start:
+            try:
+                datetime.fromisoformat(start)
+            except ValueError:
+                return jsonify(error="That date and time isn't valid."), 400
+        with db.connect() as c:
+            c.execute("INSERT INTO appointments(kind,provider,purpose,start,status,booking_link,created_at) "
+                      "VALUES(?,?,?,?,?,?,?)",
+                      (b["kind"], str(b.get("provider", ""))[:100], str(b.get("purpose", ""))[:200], start,
+                       "booked" if b.get("booked") else "to_book", link, db.now()))
+        return jsonify(ok=True)
+
+    @app.post("/api/appointments/<int:aid>")
+    def appointments_update(aid):
+        st = body().get("status")
+        if st not in ("booked", "done", "cancelled", "to_book"):
+            abort(400)
+        with db.connect() as c:
+            c.execute("UPDATE appointments SET status=? WHERE id=?", (st, aid))
+        return jsonify(ok=True)
 
     @app.post("/api/quit")
     def quit_app():

@@ -190,6 +190,10 @@ browser. The page is one self-contained HTML file; there are no external assets 
 | Script injection from email text | Page renders model output with escape-first markdown; links are shown as plain text; CSP `default-src 'none'` with only inline script/style and same-origin fetch |
 | Path traversal in brief names | Names must match `[\w-]+\.md` |
 
+### Life modules (money, health, appointments)
+
+`assistant/life.py` does the work with no Claude calls: Copilot CSV import (dedupes; sign of "money out" is inferred from income rows), category limits, spending groups (eating out / groceries / shopping / other, with user overrides), Apple Health workout import (streamed XML from the zip, workouts only), goal progress and `compute_alerts()`. Alert rules: limit reached (80% / 100%), eating-out burst per week, monthly pace vs the last three months for eating out and shopping, a large drop in food spending or few logged meals (supportive wording, no numbers about food), goals behind pace, appointment reminders, stale data. `tools/life.py` exposes this to the agent (all local, none need approval); `tools/calendar.py` finds free time and creates events (event creation needs approval) using its own token (`secrets/calendar_token.json`, scopes `calendar.events` and `calendar.freebusy`), so the Gmail sign-in is untouched. Booking is never automated: appointments are records plus prepared details; the user confirms bookings with the provider. Imports only read files inside `data/imports/` by plain name. Booking links must be `https://` and are shown as text to copy, never as clickable links.
+
 ## 9. Operations
 
 - **Install:** venv + `pip install -r requirements.txt`, fill `.env`, `connect`.
