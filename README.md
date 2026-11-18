@@ -111,10 +111,6 @@ The window has a **Today** page (what needs you, at a glance) and pages for Mone
 - **LinkedIn** is read through its notification emails in Gmail, not LinkedIn itself.
 - **Booking appointments:** the assistant finds times and prepares details, but you confirm every booking yourself.
 
-## Building with Claude Code (software factory)
-
-The `.claude/skills/` folder holds three Claude Code skills for building apps in a repeatable way: `software-factory` (the overall process with approval gates), `requirements-scenarios` (interview and `SPEC.md`) and `acceptance-validation` (prove it works on your own machine). Open this folder in Claude Code and ask it to use them, for example "use the software-factory skill to build X".
-
 ## How safety works
 
 - **Drafts are free; sends need approval.** `send_gmail`, `send_gmail_reply`,
