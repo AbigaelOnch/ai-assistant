@@ -57,14 +57,17 @@ and see [Apple Notes and iMessage permissions](#4-apple-notes-and-imessage-permi
 `Assistant.bat` (Windows) or `python -m assistant ui` (Mac) opens
 `http://127.0.0.1:8765` in your browser:
 
-| Section | What it does |
+| Part of the page | What it does |
 |---|---|
-| **Chat** | Ask things like "what needs my attention today?" or "draft replies for anything that needs one". Shows live progress while it works. |
-| **Check now** | Goes through everything new since the last check and saves a brief. |
-| **Waiting for you** | Every email or message the assistant wants to send, with the full text. Edit it, then **Approve and send** or **Don't send**. |
-| **Tasks** | Action items it found, plus your own, with due dates. |
-| **Briefs** | Every saved check. |
-| **About you** | Edit your profile: who matters, what to ignore, how your replies should sound. |
+| **Needs your action** | Approvals waiting for you, tasks due soon, budget and health alerts, appointments to book. Each has a button that jumps to the right section. |
+| **What's new** | The last week of activity: tasks it added, things you approved, workouts, appointments, the latest check. |
+| **Waiting for you** | Every email or calendar event the assistant wants to send or add, with the full text. Edit it, then **Approve** or **Don't do it**. |
+| **Tasks, Money, Health, Appointments** | Collapsible sections (click the heading). They remember whether you left them open. |
+| **Ask the assistant** | The black button floating at the bottom. It opens a chat panel that knows it is being asked from this page. Collapse it with the button or Esc. |
+| **Refresh now** | Optional. The app already checks by itself every hour while it's open. |
+| **Briefs**, **About you** | Saved checks, and your profile (who matters, what to ignore, how your replies should sound). |
+
+The page is white by default. Use **Dark mode** in the sidebar to switch.
 
 Use **Quit assistant** in the sidebar to stop it. Scheduled checks keep running either way.
 The page only works on your own computer; other websites can't talk to it
@@ -90,9 +93,9 @@ The app opens to one page: **Needs your action** and **What's new** at the top, 
 
 The window has a **Today** page (what needs you, at a glance) and pages for Money, Health and Appointments. Everything here is stored on your computer in `data/assistant.db`.
 
-**Budget alerts (Copilot).** Copilot has no public connection, so you bring the data: in Copilot go to Settings, Account, Export your transactions, then choose the file on the **Money** page (importing twice is safe). Set a monthly limit next to any category. You get alerts when you're close to or over a limit, when eating out or shopping runs well above your recent months, and when you've ordered out a lot in a week (default 5 times; ask in chat to change it). Alerts are only as fresh as your last export, and the assistant tells you when the data is getting old.
+**Budget alerts (Copilot).** Copilot has no public connection, so you bring the data: in Copilot go to Settings, Account, Export your transactions, then choose the file on the **Money** page (importing twice is safe). Set a monthly limit next to any category. You get alerts when you're close to or over a limit, when eating out or shopping runs well above your recent months, and when you've ordered out a lot in a week (default 5 times; ask the assistant to change it). Alerts are only as fresh as your last export, and the assistant tells you when the data is getting old.
 
-**Eating habits.** Eating out vs groceries is worked out from Copilot's categories and delivery apps (say "count Coffee as eating out" in chat to change how a category is treated). A big drop in food spending, or very few logged meals, produces a gentle check-in, never calorie or weight numbers. Logging meals is optional.
+**Eating habits.** Eating out vs groceries is worked out from Copilot's categories and delivery apps (say "count Coffee as eating out" in the ask box to change how a category is treated). A big drop in food spending, or very few logged meals, produces a gentle check-in, never calorie or weight numbers. Logging meals is optional.
 
 **Workouts and goals.** Set goals on the **Health** page (for example 4 workouts a week), log workouts there or in chat ("ran 3 miles"), or import Apple Health: on your iPhone open Health, tap your picture, Export All Health Data, send the zip to your PC, and choose it on the Health page. Only workouts are read.
 
