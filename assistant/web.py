@@ -18,14 +18,14 @@ import threading
 import urllib.request
 import uuid
 import webbrowser
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import Flask, Response, abort, jsonify, request
 
 from . import db, life
-from .config import (DATA_DIR, ENABLED_TOOLS, GMAIL_TOKEN_FILE, MODEL, PROFILE_PATH,
+from .config import (AUTO_CHECK_MINUTES, DATA_DIR, ENABLED_TOOLS, GMAIL_TOKEN_FILE, MODEL, PROFILE_PATH,
                      api_key_problem)
 from .errors import explain_error
 from .tools import available_sources, load_tools
@@ -33,6 +33,8 @@ from .tools import available_sources, load_tools
 PAGE = Path(__file__).with_name("ui.html")
 FIRST_PORT = 8765
 LOCAL_HOSTS = {"127.0.0.1", "localhost"}
+VIEW_NAMES = {"today": "Today", "approvals": "Waiting for you", "tasks": "Tasks", "money": "Money",
+              "health": "Health", "appts": "Appointments", "briefs": "Briefs"}
 EDITABLE_ARGS = {"body", "text", "subject"}   # fields you may edit before approving
 CSP = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
        "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'; "
@@ -148,7 +150,9 @@ def create_app() -> Flask:
 
     @app.post("/api/chat")
     def chat_send():
-        text = ((request.get_json(silent=True) or {}).get("text") or "").strip()
+        data = request.get_json(silent=True) or {}
+        text = (data.get("text") or "").strip()
+        view = data.get("view") if data.get("view") in VIEW_NAMES else "today"
         if not text:
             return jsonify(error="Type a message first."), 400
         problem = api_key_problem()
@@ -161,16 +165,18 @@ def create_app() -> Flask:
             steps: list[str] = []
             agent.on_event = lambda e: (steps.append(e.get("tool", "")) if e["type"] == "tool" else None,
                                         emit(e))
-            S["transcript"].append({"role": "user", "text": text, "at": db.now()})
+            S["transcript"].append({"role": "user", "text": text, "view": view, "at": db.now()})
             keep = len(agent.messages)
             try:
-                reply = agent.ask(text)
+                reply = agent.ask(f"[The user is asking from the {VIEW_NAMES[view]} page of the app. "
+                                  f"Questions are probably about that area.]\n{text}")
             except Exception as e:
                 del agent.messages[keep:]  # drop the half-finished turn, keep earlier context
-                S["transcript"].append({"role": "error", "text": explain_error(e), "at": db.now()})
+                S["transcript"].append({"role": "error", "text": explain_error(e), "view": view,
+                                        "at": db.now()})
                 raise
             S["transcript"].append({"role": "assistant", "text": reply, "steps": steps,
-                                    "at": db.now()})
+                                    "view": view, "at": db.now()})
 
         job = start_job("chat", work)
         return busy_response() if job is None else jsonify(job_id=job["id"])
@@ -183,17 +189,13 @@ def create_app() -> Flask:
         S["transcript"] = []
         return jsonify(ok=True)
 
-    @app.post("/api/check")
-    def check_now():
-        problem = api_key_problem()
-        if problem:
-            return jsonify(error=problem), 400
-
+    def launch_check():
+        """Start a check of all accounts; returns the job, or None if busy."""
         def work(emit):
             from .checks import run_check
             steps: list[str] = []
             S["transcript"].append({"role": "user", "text": "Check now", "kind": "check",
-                                    "at": db.now()})
+                                    "view": "today", "at": db.now()})
 
             def on_event(e):
                 if e["type"] == "tool":
@@ -202,13 +204,42 @@ def create_app() -> Flask:
             try:
                 brief, path = run_check(on_event)
             except Exception as e:
-                S["transcript"].append({"role": "error", "text": explain_error(e), "at": db.now()})
+                S["transcript"].append({"role": "error", "text": explain_error(e), "view": "today",
+                                        "at": db.now()})
                 raise
             S["transcript"].append({"role": "assistant", "text": brief, "steps": steps,
-                                    "kind": "check", "brief": path.name, "at": db.now()})
+                                    "kind": "check", "brief": path.name, "view": "today",
+                                    "at": db.now()})
+        return start_job("check", work)
 
-        job = start_job("check", work)
+    @app.post("/api/check")
+    def check_now():
+        problem = api_key_problem()
+        if problem:
+            return jsonify(error=problem), 400
+        job = launch_check()
         return busy_response() if job is None else jsonify(job_id=job["id"])
+
+    def autocheck_loop():
+        """While the app is open, check on its own every AUTO_CHECK_MINUTES."""
+        import time
+        time.sleep(15)
+        while True:
+            try:
+                every = AUTO_CHECK_MINUTES * 60
+                last = db.last_run_time()
+                last_ts = datetime.fromisoformat(last).timestamp() if last else 0
+                due = time.time() - max(last_ts, S.get("auto_last", 0)) >= every
+                sources = available_sources(ENABLED_TOOLS) - {"gmail"} or \
+                    ({"gmail"} if GMAIL_TOKEN_FILE.exists() else set())
+                if every and due and sources and not api_key_problem() and not lock.locked():
+                    S["auto_last"] = time.time()   # one attempt per interval, even if it fails
+                    launch_check()
+            except Exception:
+                pass
+            time.sleep(60)
+
+    app.start_autocheck = lambda: threading.Thread(target=autocheck_loop, daemon=True).start()
 
     # ---- tasks -------------------------------------------------------------
     @app.get("/api/tasks")
@@ -282,6 +313,32 @@ def create_app() -> Flask:
         db.decide_approval(aid, "denied")
         return jsonify(ok=True)
 
+    # ---- what's new: a short feed of recent happenings ------------------------
+    @app.get("/api/new")
+    def whats_new():
+        since = (datetime.now() - timedelta(days=7)).isoformat(timespec="seconds")
+        feed = []
+        with db.connect() as c:
+            for r in c.execute("SELECT title, source, created_at FROM tasks WHERE created_at >= ?", (since,)):
+                feed.append({"at": r["created_at"], "text": "New task: " + r["title"]})
+            for r in c.execute("SELECT tool, reason, status, decided_at FROM approvals "
+                               "WHERE decided_at >= ? AND status IN ('approved','denied','failed')", (since,)):
+                word = {"approved": "Done", "denied": "Declined", "failed": "Failed"}[r["status"]]
+                feed.append({"at": r["decided_at"], "text": f"{word}: {r['reason'] or r['tool']}"})
+            for r in c.execute("SELECT kind, provider, created_at FROM appointments WHERE created_at >= ?", (since,)):
+                feed.append({"at": r["created_at"], "text": f"Appointment added: {r['kind']}"
+                             + (f" with {r['provider']}" if r["provider"] else "")})
+            for r in c.execute("SELECT day, kind, source FROM workouts WHERE day >= ? ORDER BY day DESC LIMIT 5",
+                               (since[:10],)):
+                feed.append({"at": r["day"] + "T12:00:00", "text": f"Workout: {r['kind']}"})
+            last = c.execute("SELECT started_at, summary FROM runs ORDER BY id DESC LIMIT 1").fetchone()
+        brief = None
+        if last and last["started_at"] >= since:
+            line = next((l.strip("#-*• ").strip() for l in (last["summary"] or "").splitlines() if l.strip()), "")
+            feed.append({"at": last["started_at"], "text": "Checked your accounts" + (": " + line[:140] if line else "")})
+        feed.sort(key=lambda x: x["at"], reverse=True)
+        return jsonify(items=feed[:10])
+
     # ---- briefs ------------------------------------------------------------
     @app.get("/api/briefs")
     def briefs_get():
@@ -328,7 +385,8 @@ def create_app() -> Flask:
             model=MODEL, key_problem=api_key_problem(), sources=sorted(sources),
             gmail_signed_in="gmail" in sources and GMAIL_TOKEN_FILE.exists(),
             gmail_needs_signin="gmail" in sources and not GMAIL_TOKEN_FILE.exists(),
-            outlook="outlook" in sources, last_run=db.last_run_time(), busy=lock.locked(),
+            outlook="outlook" in sources, last_run=db.last_run_time(),
+            busy=lock.locked(), active_job=S["active"], auto_minutes=AUTO_CHECK_MINUTES,
             pending=len(db.pending_approvals()), open_tasks=open_tasks, due_tasks=due,
             alerts=len(life.compute_alerts()), calendar=calendar_connected())
 
@@ -519,4 +577,6 @@ def serve(open_browser: bool = True) -> None:
     print(f"[{datetime.now():%H:%M:%S}] Assistant running at {url}", flush=True)
     if open_browser:
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
-    create_app().run(host="127.0.0.1", port=port, threaded=True, use_reloader=False)
+    app = create_app()
+    app.start_autocheck()
+    app.run(host="127.0.0.1", port=port, threaded=True, use_reloader=False)

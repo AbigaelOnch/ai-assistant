@@ -60,6 +60,7 @@ DB_PATH = DATA_DIR / "assistant.db"
 
 PROFILE_PATH = ROOT / "profile.md"
 LOOKBACK_HOURS = int(os.getenv("LOOKBACK_HOURS", "24"))
+AUTO_CHECK_MINUTES = int(os.getenv("AUTO_CHECK_MINUTES", "60") or 0)   # 0 = only when you press Check now
 NOTIFY = os.getenv("NOTIFY", "true").lower() == "true"
 
 GMAIL_CREDENTIALS_FILE = _path("GMAIL_CREDENTIALS_FILE", "secrets/gmail_credentials.json")

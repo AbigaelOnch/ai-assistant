@@ -8,24 +8,24 @@
 <style>
 :root{
   /* each part of your life has its own colour, so you always know where you are */
-  --canvas:#e9e6f5; --sheet:#fbfaff; --card:#ffffff; --ink:#1c1a2e; --muted:#69667d; --line:#e2dff0;
-  --violet:#5a3df0; --violet-soft:#e8e4ff; --on-violet:#fff;
+  --canvas:#ffffff; --sheet:#ffffff; --card:#ffffff; --ink:#17171c; --muted:#6a6a75; --line:#e6e6eb; --hover:rgba(0,0,0,.05);
+  --violet:#17171c; --violet-soft:#f2f2f5; --on-violet:#ffffff; --blue:#2f6fdb;
   --jade:#0d7a63;   --jade-soft:#d6f2e8;
   --coral:#d9442f;  --coral-soft:#ffe2db;
   --gold:#8a5a00;   --gold-soft:#ffefc7;
   --danger:#b3261e; --ok:#0d7a63;
-  --shadow:0 1px 2px rgba(28,26,46,.06),0 8px 24px -12px rgba(28,26,46,.18);
+  --shadow:0 1px 2px rgba(0,0,0,.04);
   --font:"Segoe UI Variable Display","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --canvas:#0f0d1a; --sheet:#171526; --card:#1f1c33; --ink:#eeecf8; --muted:#a09cba; --line:#2d2a47;
-    --violet:#a99bff; --violet-soft:#2a2554; --on-violet:#14102e;
+    --canvas:#0e0e11; --sheet:#0e0e11; --card:#17171b; --ink:#f1f1f4; --muted:#9d9da8; --line:#2a2a31; --hover:rgba(255,255,255,.08);
+    --violet:#f1f1f4; --violet-soft:#24242a; --on-violet:#111114; --blue:#7aa7ff;
     --jade:#58d6b2; --jade-soft:#123a31;
     --coral:#ff8f78; --coral-soft:#43211b;
     --gold:#f3c15d; --gold-soft:#3a2d0d;
     --danger:#ff968d; --ok:#58d6b2;
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+    --shadow:none;
   }
 }
 *{box-sizing:border-box}
@@ -34,7 +34,7 @@ body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.5 var(--font
   display:grid;grid-template-columns:224px minmax(0,1fr);gap:0;padding:12px 12px 12px 0}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid var(--violet);outline-offset:2px;border-radius:10px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:10px}
 h1{font-size:34px;line-height:1.1;letter-spacing:-.025em;margin:0 0 6px;font-weight:720}
 h2{font-size:24px;line-height:1.15;letter-spacing:-.02em;margin:0 0 4px;font-weight:700}
 h3{font-size:16px;margin:0 0 4px;font-weight:650}
@@ -55,14 +55,14 @@ nav .sep{height:10px}
 nav button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:0;background:none;
   padding:9px 12px;border-radius:14px;color:var(--muted);font-weight:560}
 nav button svg{width:19px;height:19px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-nav button:hover{background:rgba(120,110,200,.1);color:var(--ink)}
-nav button[aria-current=page]{background:var(--sheet);color:var(--ink);box-shadow:var(--shadow);font-weight:680}
+nav button:hover{background:var(--hover);color:var(--ink)}
+nav button[aria-current=page]{background:var(--violet-soft);color:var(--ink);font-weight:680}
 nav button[data-view=money][aria-current=page] svg{color:var(--jade)}
 nav button[data-view=health][aria-current=page] svg{color:var(--coral)}
 nav button[data-view=appts][aria-current=page] svg{color:var(--gold)}
-nav button[aria-current=page] svg{color:var(--violet)}
+nav button[aria-current=page] svg{color:var(--ink)}
 .count{margin-left:auto;min-width:22px;text-align:center;font-size:12px;font-weight:700;padding:1px 7px;border-radius:999px;
-  background:rgba(120,110,200,.16);color:var(--muted)}
+  background:var(--violet-soft);color:var(--muted)}
 .count.warn{background:var(--coral);color:#fff}
 .count:empty,.count[data-n="0"]{display:none}
 #sources{margin-top:auto;padding:14px 10px 4px;font-size:12.5px;color:var(--muted);display:grid;gap:4px}
@@ -72,27 +72,26 @@ nav button[aria-current=page] svg{color:var(--violet)}
 #quit:hover{color:var(--ink)}
 
 /* ---------- the sheet ---------- */
-main{background:var(--sheet);border-radius:28px;box-shadow:var(--shadow);min-width:0;min-height:0;
+main{background:var(--sheet);border-radius:28px;border:1px solid var(--line);min-width:0;min-height:0;
   overflow:hidden;display:flex;flex-direction:column;height:calc(100vh - 24px)}
 #banner{background:var(--coral-soft);color:var(--danger);padding:11px 32px;font-weight:600}
 .view{display:none;flex:1;min-height:0;overflow:auto}
 .view.on{display:block}
-#view-chat.on{display:flex;flex-direction:column;overflow:hidden}
-.col{max-width:860px;margin:0 auto;padding:34px 32px 60px}
+.col{max-width:1000px;margin:0 auto;padding:34px 32px 60px}
 .head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px}
 .head .muted{max-width:56ch}
-.link{background:none;border:0;padding:0;color:var(--violet);font-weight:640;text-decoration:underline;text-underline-offset:3px}
+.link{background:none;border:0;padding:0;color:var(--ink);font-weight:640;text-decoration:underline;text-underline-offset:3px}
 
 /* buttons + fields */
 .btn{border:0;border-radius:999px;background:var(--violet);color:var(--on-violet);padding:9px 18px;font-weight:650}
 .btn:hover{filter:brightness(1.08)}
-.btn.quiet{background:rgba(120,110,200,.14);color:var(--ink)}
+.btn.quiet{background:var(--violet-soft);color:var(--ink)}
 .btn.warn{background:var(--coral);color:#fff}
 .btn.small{padding:6px 13px;font-size:13.5px}
 .btn[disabled]{opacity:.55;cursor:default}
 input[type=text],input[type=number],input[type=date],input[type=datetime-local],select,textarea{
   width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--card);padding:9px 12px}
-input:focus,select:focus,textarea:focus{border-color:var(--violet);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--ink);outline:none}
 textarea{resize:vertical;min-height:96px}
 label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10px 0 4px}
 .addrow{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
@@ -100,17 +99,22 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 
 /* ---------- Today ---------- */
 .hello{margin-bottom:26px}
+.twocol{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:34px;align-items:start}
+.lbl{font-size:15px;margin:0 0 10px;color:var(--muted);font-weight:650}
+@media (max-width:980px){.twocol{grid-template-columns:1fr}}
+.block{margin-top:56px;padding-top:28px;border-top:1px solid var(--line)}
+.block .head h2{font-size:22px}
 .hello p{font-size:17px;color:var(--muted);margin:0}
 .heads{display:grid;gap:10px;margin-bottom:30px}
-.row{display:flex;gap:14px;align-items:flex-start;background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
-.row .pip{width:10px;height:10px;border-radius:50%;margin-top:7px;flex:none;background:var(--violet)}
+.row{display:flex;gap:14px;align-items:flex-start;background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.row .pip{width:10px;height:10px;border-radius:50%;margin-top:7px;flex:none;background:var(--muted)}
 .row[data-area=budget] .pip{background:var(--jade)}
 .row[data-area=health] .pip{background:var(--coral)}
 .row[data-area=appointments] .pip{background:var(--gold)}
 .row .t{font-weight:650}
 .row .d{color:var(--muted);font-size:14px}
 .row .go{margin-left:auto;align-self:center}
-.row.warn{outline:2px solid var(--coral-soft)}
+.row.warn{border-color:var(--coral)}
 .calm{padding:18px 20px;border-radius:18px;background:var(--jade-soft);color:var(--jade);font-weight:600}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:14px}
 .tile{display:flex;flex-direction:column;gap:10px;text-align:left;border:0;border-radius:24px;padding:20px;min-height:176px;color:var(--ink)}
@@ -121,7 +125,7 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 .tile.t-money{background:var(--jade-soft)}
 .tile.t-health{background:var(--coral-soft)}
 .tile.t-appts{background:var(--gold-soft)}
-.tile.t-inbox h3{color:var(--violet)}.tile.t-money h3{color:var(--jade)}
+.tile.t-inbox h3{color:var(--muted)}.tile.t-money h3{color:var(--jade)}
 .tile.t-health h3{color:var(--coral)}.tile.t-appts h3{color:var(--gold)}
 .tile:hover{transform:translateY(-2px)}
 .tile{transition:transform .15s}
@@ -129,7 +133,7 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 .seg i{display:block;min-width:4px}
 .legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px}
 .legend b{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
-.c-eat{background:var(--coral)}.c-groc{background:var(--jade)}.c-shop{background:var(--violet)}.c-oth{background:#9a97b0}
+.c-eat{background:var(--coral)}.c-groc{background:var(--jade)}.c-shop{background:var(--blue)}.c-oth{background:#9a97b0}
 .week{display:flex;gap:7px}
 .week span{width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.09);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--muted)}
 .week span.did{background:var(--coral);color:#fff}
@@ -141,12 +145,19 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 }
 
 /* ---------- chat ---------- */
-#transcript{flex:1;overflow:auto;padding:30px 0 10px}
+#ask{flex:none;padding:6px 32px 18px;max-width:100%}
+#ask.hidden{display:none}
+#askLog,#askChips,#chatForm{max-width:820px;margin-left:auto;margin-right:auto}
+#askLog{max-height:40vh;overflow:auto;margin-bottom:10px;padding-top:6px}
+#askChips{margin:0 auto 10px}#askChips:empty{display:none}
+#askLog .msg.me,#askLog .msg.bot,#askLog .msg.live,#askLog .msg.err{width:auto;max-width:100%;margin:0 0 10px}
+#askLog .msg.me{margin-left:auto;width:fit-content;max-width:80%}
+#askLog .msg.bot,#askLog .msg.live,#askLog .msg.err{padding:14px 18px}
 .msg{max-width:760px;margin:0 auto 14px;padding:0 32px}
 .msg>div,.msg.me,.msg.bot,.msg.err,.msg.live{border-radius:20px}
 .msg.me{margin-left:auto;margin-right:max(32px,calc((100% - 760px)/2));max-width:min(560px,88%);padding:11px 18px;
   background:var(--violet);color:var(--on-violet);width:fit-content;margin-left:auto}
-.msg.bot,.msg.live,.msg.err{width:min(760px,calc(100% - 64px));margin:0 auto 14px;padding:16px 20px;background:var(--card);box-shadow:var(--shadow)}
+.msg.bot,.msg.live,.msg.err{width:min(760px,calc(100% - 64px));margin:0 auto 14px;padding:16px 20px;background:var(--card);box-shadow:var(--shadow);border:1px solid var(--line)}
 .msg.err{background:var(--coral-soft);color:var(--danger)}
 .msg.bot h3{margin:14px 0 4px}.msg.bot p:last-child{margin:0}
 .msg code{background:var(--violet-soft);padding:1px 6px;border-radius:6px}
@@ -156,20 +167,19 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 .steps{font-size:13px;color:var(--muted);margin-bottom:8px}
 .empty{padding:70px 0 20px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.chip{border:0;background:var(--violet-soft);color:var(--violet);border-radius:999px;padding:8px 15px;font-weight:600}
-#composer{padding:10px 32px 22px}
-#chatForm{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:flex-end;background:var(--card);
-  border-radius:24px;padding:8px 8px 8px 18px;box-shadow:var(--shadow)}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 15px;font-weight:600}
+#chatForm{display:flex;gap:10px;align-items:flex-end;background:var(--card);
+  border-radius:24px;padding:8px 8px 8px 18px;box-shadow:var(--shadow);border:1px solid var(--line)}
 #chatInput{border:0;background:none;padding:8px 0;min-height:0;resize:none;max-height:180px}
 #chatInput:focus{outline:none}
 
 /* ---------- approvals, tasks ---------- */
-.ask{background:var(--card);border-radius:22px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow);border-left:6px solid var(--gold)}
+.ask{background:var(--card);border-radius:22px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid var(--line);border-left:6px solid var(--gold)}
 .acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
 .past{display:grid;grid-template-columns:auto 1fr auto;gap:8px 14px;align-items:center;font-size:14px}
-.tag{font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--violet-soft);color:var(--violet)}
+.tag{font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--violet-soft);color:var(--ink)}
 .tag.denied,.tag.failed{background:var(--coral-soft);color:var(--danger)}.tag.approved{background:var(--jade-soft);color:var(--jade)}
-.task{display:flex;gap:14px;align-items:flex-start;background:var(--card);border-radius:18px;padding:13px 16px;margin-bottom:8px;box-shadow:var(--shadow)}
+.task{display:flex;gap:14px;align-items:flex-start;background:var(--card);border-radius:18px;padding:13px 16px;margin-bottom:8px;box-shadow:var(--shadow);border:1px solid var(--line)}
 .tick{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);background:none;flex:none;margin-top:1px}
 .tick:hover{border-color:var(--violet)}
 .task.done .tick{background:var(--jade);border-color:var(--jade)}
@@ -178,7 +188,7 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 .over,.hi{color:var(--danger);font-weight:650}
 
 /* ---------- money / health / appointments ---------- */
-.card{background:var(--card);border-radius:24px;padding:20px 22px;box-shadow:var(--shadow);margin-bottom:16px}
+.card{background:var(--card);border-radius:24px;padding:20px 22px;box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:16px}
 .cat{display:grid;grid-template-columns:minmax(120px,1.2fr) 3fr 120px;gap:6px 16px;align-items:center;padding:9px 0}
 .cat+.cat{border-top:1px solid var(--line)}
 .cat .nm{font-weight:600}.cat .amt{font-size:13px;color:var(--muted)}
@@ -191,7 +201,7 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 .goal .bar i{background:var(--coral)}
 .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;margin-right:8px}
 .pill.doctor,.pill.dentist{background:var(--jade-soft);color:var(--jade)}.pill.beauty{background:var(--coral-soft);color:var(--coral)}
-.pill.other{background:var(--violet-soft);color:var(--violet)}
+.pill.other{background:var(--violet-soft);color:var(--ink)}
 .appt{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
 .appt .when{font-weight:650}
 .split{display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px;max-width:1000px;margin:0 auto;padding:34px 32px}
@@ -220,6 +230,7 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 <aside id="rail">
   <div class="brand"><i></i>Assistant</div>
   <button id="check" type="button"><span id="checkLabel">Check now</span></button>
+  <div id="autoNote" class="small muted" style="padding:0 10px 8px"></div>
   <nav aria-label="Sections" id="nav"></nav>
   <div id="sources" aria-label="Connections"></div>
   <button id="quit" type="button">Quit assistant</button>
@@ -228,21 +239,9 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 <main>
   <div id="banner" class="hidden" role="status"></div>
 
-  <section class="view" id="view-today"><div class="col" id="todayBody"></div></section>
-
-  <section class="view" id="view-chat">
-    <div id="transcript" aria-live="polite"></div>
-    <div id="composer">
-      <form id="chatForm">
-        <label class="hidden" for="chatInput">Message</label>
-        <textarea id="chatInput" rows="1" placeholder="Ask anything: email, budget, workouts, appointments"></textarea>
-        <button class="btn" id="sendBtn" type="submit">Send</button>
-      </form>
-    </div>
-  </section>
-
-  <section class="view" id="view-approvals">
-    <div class="col">
+  <section class="view" id="view-today"><div class="col"><div id="todayBody"></div>
+<section class="block" id="view-approvals">
+    <div>
       <div class="head"><div><h2>Waiting for you</h2>
         <div class="muted">Nothing is sent or put on your calendar until you approve it. You can edit the text first.</div></div></div>
       <div id="pending"></div>
@@ -251,8 +250,8 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
     </div>
   </section>
 
-  <section class="view" id="view-tasks">
-    <div class="col">
+  <section class="block" id="view-tasks">
+    <div>
       <div class="head"><div><h2>Tasks</h2>
         <div class="muted">Action items the assistant found, plus anything you add.</div></div>
         <button class="link" id="toggleDone" type="button">Show completed</button></div>
@@ -269,11 +268,10 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
     </div>
   </section>
 
-  <section class="view" id="view-money">
-    <div class="col">
+  <section class="block" id="view-money">
+    <div>
       <div class="head"><div><h2>Money</h2>
         <div class="muted" id="moneySub">Your spending from Copilot, against limits you set.</div></div></div>
-      <div id="moneyAlerts"></div>
       <div class="card" id="moneyMix"></div>
       <div class="card"><h3>By category</h3><div id="cats"></div></div>
       <div class="card">
@@ -285,11 +283,10 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
     </div>
   </section>
 
-  <section class="view" id="view-health">
-    <div class="col">
+  <section class="block" id="view-health">
+    <div>
       <div class="head"><div><h2>Health</h2>
         <div class="muted">Workouts, goals and eating habits. Kept on this computer.</div></div></div>
-      <div id="healthAlerts"></div>
       <div class="card"><h3>Goals</h3><div id="goals"></div>
         <form class="addrow" id="goalForm" style="margin:14px 0 0">
           <label class="hidden" for="gTitle">Goal</label><input type="text" id="gTitle" placeholder="New goal, e.g. Move more" maxlength="100">
@@ -320,8 +317,8 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
     </div>
   </section>
 
-  <section class="view" id="view-appts">
-    <div class="col">
+  <section class="block" id="view-appts">
+    <div>
       <div class="head"><div><h2>Appointments</h2>
         <div class="muted">The assistant finds times and gets the details ready. You confirm every booking yourself.</div></div></div>
       <div id="apptCal"></div>
@@ -342,6 +339,8 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
     </div>
   </section>
 
+  </div></section>
+
   <section class="view" id="view-briefs">
     <div class="split">
       <div><h2>Briefs</h2><div class="list" id="briefList"></div></div>
@@ -358,6 +357,15 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
       <div class="acts"><button class="btn" id="saveProfile" type="button">Save</button></div>
     </div>
   </section>
+  <div id="ask">
+    <div id="askLog" class="hidden" aria-live="polite"></div>
+    <div id="askChips" class="chips"></div>
+    <form id="chatForm">
+      <label class="hidden" for="chatInput">Ask about this page</label>
+      <textarea id="chatInput" rows="1"></textarea>
+      <button class="btn" id="sendBtn" type="submit">Ask</button>
+    </form>
+  </div>
 </main>
 
 <div id="toast" role="status"></div>
@@ -367,7 +375,7 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:10p
 <script>
 const TOKEN="__TOKEN__";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-let status={}, busy=false, showDone=false, currentView="today", firstToday=true;
+let status={}, busy=false, showDone=false, currentView="today", firstToday=true, askJob=null;
 
 const ICONS={
  today:'<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4v-5H9v5H5a1 1 0 0 1-1-1z"/>',
@@ -379,8 +387,7 @@ const ICONS={
  appts:'<rect x="4" y="5.5" width="16" height="14" rx="3"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/>',
  briefs:'<path d="M7 4h8l3 3v13H7z"/><path d="M10 11h5M10 15h5"/>',
  profile:'<circle cx="12" cy="9" r="3.5"/><path d="M5 20c.8-3.5 3.6-5 7-5s6.2 1.5 7 5"/>'};
-const NAV=[["today","Today"],["chat","Chat"],["approvals","Waiting for you","nApprovals"],["tasks","Tasks","nTasks"],"sep",
-  ["money","Money"],["health","Health"],["appts","Appointments"],"sep",["briefs","Briefs"],["profile","About you"]];
+const NAV=[["today","Home"],"sep",["briefs","Briefs"],["profile","About you"]];
 $("#nav").innerHTML=NAV.map(n=>n==="sep"?'<div class="sep"></div>':
   `<button data-view="${n[0]}" type="button"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[n[0]]}</svg>${n[1]}${n[2]?`<span class="count" id="${n[2]}" data-n="0">0</span>`:""}</button>`).join("");
 
@@ -435,21 +442,24 @@ function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clea
 const guard=fn=>async(...a)=>{try{return await fn(...a);}catch(e){toast(e.message);}};
 
 const LOADERS={};
+function go(v){const e=document.getElementById("view-"+v);
+  if(e&&e.classList.contains("block")){e.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"});}
+  else show(v);}
 function show(v){
   currentView=v;
   $$(".view").forEach(e=>e.classList.toggle("on",e.id==="view-"+v));
   $$("nav button").forEach(b=>{if(b.dataset.view===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
   LOADERS[v]();
+  renderAsk();
 }
 $$("nav button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.view)));
 
 /* status */
 async function loadStatus(){
   try{status=await api("/api/status");}catch(e){return;}
-  const set=(id,n)=>{const e=$(id);e.textContent=n;e.dataset.n=n;e.classList.toggle("warn",n>0&&id==="#nApprovals");};
-  set("#nApprovals",status.pending);set("#nTasks",status.open_tasks);
-  const src=[["Gmail",status.gmail_signed_in],["Calendar",status.calendar],["Outlook",status.outlook]];
+    const src=[["Gmail",status.gmail_signed_in],["Calendar",status.calendar],["Outlook",status.outlook]];
   $("#sources").innerHTML=src.map(([n,s])=>`<div><span class="dot ${s?"on":"off"}"></span>${esc(n)}${s?"":" not connected"}</div>`).join("");
+  $("#autoNote").textContent=status.auto_minutes?"Also checks on its own every "+(status.auto_minutes>=60?(status.auto_minutes/60)+(status.auto_minutes===60?" hour":" hours"):status.auto_minutes+" minutes")+" while open.":"";
   const b=$("#banner");
   if(status.key_problem){b.textContent="Claude isn't set up yet. "+status.key_problem;b.classList.remove("hidden");}
   else b.classList.add("hidden");
@@ -460,77 +470,75 @@ function greeting(){const h=new Date().getHours();return h<5?"Late night":h<12?"
 function alertRow(a){return `<div class="row ${a.level}" data-area="${esc(a.area)}"><span class="pip"></span><div><div class="t">${esc(a.title)}</div><div class="d">${esc(a.detail)}</div></div></div>`;}
 async function loadToday(){
   await loadStatus();
-  const [al,bu,he,ap]=await Promise.all([api("/api/alerts"),api("/api/budget"),api("/api/health"),api("/api/appointments")]).catch(()=>[null]);
-  if(!al){return;}
-  const items=[];
-  if(status.pending)items.push(`<div class="row" data-area="inbox"><span class="pip"></span><div><div class="t">${plural(status.pending,"item is","items are")} waiting for your OK</div><div class="d">Nothing goes out until you approve it.</div></div><button class="btn small go" data-go="approvals" type="button">Review</button></div>`);
-  if(status.due_tasks)items.push(`<div class="row" data-area="inbox"><span class="pip"></span><div><div class="t">${plural(status.due_tasks,"task is","tasks are")} due or overdue</div></div><button class="btn small quiet go" data-go="tasks" type="button">See tasks</button></div>`);
-  if(status.gmail_needs_signin)items.push(`<div class="row" data-area="inbox"><span class="pip"></span><div><div class="t">Gmail isn't connected</div><div class="d">Double-click connect_windows.bat in your assistant folder.</div></div></div>`);
-  al.alerts.forEach(a=>items.push(alertRow(a)));
-  const n=items.length;
-  // tiles
-  const lim=bu.rows.filter(r=>r.limit),over=lim.filter(r=>r.spent>=r.limit).length,near=lim.filter(r=>r.spent<r.limit&&r.spent>=.8*r.limit).length;
-  const g=bu.groups,tot=Object.values(g).reduce((a,b)=>a+Math.max(b,0),0);
-  const mix=[["eating_out","c-eat","Eating out"],["groceries","c-groc","Groceries"],["shopping","c-shop","Shopping"],["other","c-oth","Other"]];
-  const moneyTile=!bu.latest?`<div class="big">No spending yet</div><div class="sub">Import your Copilot export to start.</div>`:
-    `<div class="big">${over?plural(over,"category is","categories are")+" over budget":near?plural(near,"category is","categories are")+" close to the limit":lim.length?"On track this month":"Set a limit to get alerts"}</div>
-     <div class="seg" aria-hidden="true">${mix.map(([k,c])=>g[k]>0?`<i class="${c}" style="flex:${g[k]}"></i>`:"").join("")}</div>
-     <div class="legend">${mix.filter(([k])=>g[k]>0).map(([k,c,l])=>`<span><b class="${c}"></b>${l} ${money(g[k])}</span>`).join("")}</div>`;
-  const wk=new Set(he.workouts.map(w=>w.day)),mon=new Date();mon.setDate(mon.getDate()-((mon.getDay()+6)%7));
-  const days=[...Array(7)].map((_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return [iso(d),"MTWTFSS"[i]];});
-  const g0=he.goals[0];
-  const healthTile=`<div class="big">${g0?esc(g0.title)+": "+g0.done+" of "+g0.target+" "+esc(g0.metric.replace("_"," ")):"Set a goal to track"}</div>
-    <div class="week" aria-label="Workouts this week">${days.map(([d,l])=>`<span class="${wk.has(d)?"did":""}">${l}</span>`).join("")}</div>`;
-  const booked=ap.appointments.filter(a=>a.status==="booked"&&a.start),tobook=ap.appointments.filter(a=>a.status==="to_book").length;
-  const apptTile=booked.length?`<div class="big">${esc(booked[0].kind[0].toUpperCase()+booked[0].kind.slice(1))}${booked[0].provider?" with "+esc(booked[0].provider):""}</div><div class="sub">${esc(when(booked[0].start))}${tobook?` · ${tobook} to book`:""}</div>`
-    :`<div class="big">${tobook?plural(tobook,"appointment","appointments")+" to book":"Nothing scheduled"}</div><div class="sub">Ask in Chat to find a time.</div>`;
-  const shown=items.slice(0,4),more=items.length-shown.length;
-  $("#todayBody").innerHTML=`<div class="hello"><h1>${greeting()}</h1><p>${n?plural(n,"thing needs","things need")+" a look.":"Nothing needs you right now."}</p></div>
-    <div class="tiles ${firstToday?"enter":""}" style="margin-bottom:30px">
-      <button class="tile t-inbox" data-go="chat" type="button"><h3>Inbox</h3><div class="big">${status.open_tasks?plural(status.open_tasks,"open task","open tasks"):"No open tasks"}</div><div class="sub">${status.last_run?"Last check "+esc(when(status.last_run)):"Press Check now to start"}</div></button>
-      <button class="tile t-money" data-go="money" type="button"><h3>Money</h3>${moneyTile}</button>
-      <button class="tile t-health" data-go="health" type="button"><h3>Health</h3>${healthTile}</button>
-      <button class="tile t-appts" data-go="appts" type="button"><h3>Appointments</h3>${apptTile}</button>
+  const res=await Promise.all([api("/api/alerts"),api("/api/new"),api("/api/appointments"),api("/api/tasks")]).catch(()=>null);
+  if(!res)return;
+  const [al,nw,ap,tk]=res;
+  const row=(area,title,detail,btn)=>`<div class="row" data-area="${area}"><span class="pip"></span><div><div class="t">${esc(title)}</div>${detail?`<div class="d">${esc(detail)}</div>`:""}</div>${btn?`<button class="btn small quiet go" data-go="${btn[0]}" type="button">${esc(btn[1])}</button>`:""}</div>`;
+  const todo=[];
+  if(status.pending)todo.push(row("inbox",plural(status.pending,"item is","items are")+" waiting for your OK","Nothing goes out until you approve it.",["approvals","Review"]));
+  const today=iso(new Date()),soon=iso(new Date(Date.now()+3*864e5));
+  tk.tasks.filter(t=>t.status==="open"&&((t.due&&t.due<=soon)||t.priority==="high")).slice(0,5)
+    .forEach(t=>todo.push(row("inbox",t.title,t.due?(t.due<today?"Overdue, was due ":"Due ")+t.due:"High priority",["tasks","Open"])));
+  ap.appointments.filter(a=>a.status==="to_book").forEach(a=>todo.push(row("appointments","Book: "+a.kind+(a.provider?" with "+a.provider:""),a.purpose||"",["appts","Details"])));
+  al.alerts.forEach(a=>todo.push(row(a.area,a.title,a.detail,a.area==="budget"?["money","See"]:a.area==="health"?["health","See"]:a.area==="appointments"?["appts","See"]:null)));
+  if(status.gmail_needs_signin)todo.push(row("inbox","Connect Gmail","Double-click connect_windows.bat in your assistant folder."));
+  const feed=nw.items.map(i=>`<div class="row" style="box-shadow:none"><span class="pip" style="background:var(--line)"></span><div><div class="t" style="font-weight:560">${esc(i.text)}</div><div class="d">${esc(ago(i.at))}</div></div></div>`).join("");
+  $("#todayBody").innerHTML=`<div class="hello"><h1>${greeting()}</h1><p>${todo.length?plural(todo.length,"thing needs","things need")+" your action.":"Nothing needs you right now."}</p></div>
+    <div class="twocol">
+      <div><h3 class="lbl">Needs your action</h3><div class="heads">${todo.length?todo.join(""):`<div class="calm">All clear.</div>`}</div></div>
+      <div><h3 class="lbl">What's new</h3><div class="heads">${feed||`<p class="muted">Nothing new yet. Press Check now to look through your accounts.</p>`}</div></div>
     </div>
-    ${n?`<h3 style="margin-bottom:10px">Needs a look</h3>`:""}
-    <div class="heads">${n?shown.join(""):`<div class="calm">All clear.${status.last_run?" Last check "+esc(when(status.last_run))+".":""}</div>`}
-      ${more>0?`<div class="muted small" style="padding:0 6px">And ${more} more on the Money, Health and Appointments pages.</div>`:""}</div>`;
-  firstToday=false;
-  $$("#todayBody [data-go]").forEach(b=>b.addEventListener("click",()=>show(b.dataset.go)));
+    <h3 class="lbl" style="margin-top:46px">Details</h3>`;
+  $$("#todayBody [data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
 }
+function ago(at){const m=Math.round((Date.now()-new Date(at))/6e4);if(isNaN(m))return"";
+  if(m<1)return"Just now";if(m<60)return m+" min ago";const h=Math.round(m/60);if(h<24)return h+(h===1?" hour ago":" hours ago");
+  const d=Math.round(h/24);return d===1?"Yesterday":d+" days ago";}
 LOADERS.today=guard(loadToday);
+const loadTodayOnly=LOADERS.today;
 
-/* chat */
-function stepsHtml(steps){
-  if(!steps||!steps.length)return"";
-  return `<details class="steps"><summary>${plural(steps.length,"step","steps")} taken</summary><ul>${steps.map(s=>"<li>"+esc(label(s))+"</li>").join("")}</ul></details>`;
-}
-function renderTranscript(list){
-  const t=$("#transcript");
-  if(!list.length){
-    t.innerHTML=`<div class="col"><div class="empty"><h1>What should I look at?</h1>
-      <p class="muted">Email, spending, workouts, appointments. Ask in your own words.</p>
-      <div class="chips">${["What needs my attention today?","How am I doing on my budget?","Find a time for a dentist visit next week","How were my workouts this week?"]
-        .map(q=>`<button class="chip" type="button">${esc(q)}</button>`).join("")}</div></div></div>`;
-    $$(".chip").forEach(c=>c.addEventListener("click",()=>sendChat(c.textContent)));return;}
-  t.innerHTML=list.map(m=>{
+/* ask: a small chat docked under every page, about that page */
+const ASK={
+ today:["Ask about anything: email, money, health, appointments","What needs my attention today?","How am I doing on my budget?","Find a time for a dentist visit next week"],
+ approvals:["Ask about what's waiting for you","Which of these is most urgent?","Is anything here suspicious?"],
+ tasks:["Ask about your tasks","What should I do first?","Pull action items from my email"],
+ money:["Ask about your spending","How am I doing on my budget?","Set a $200 limit for Restaurants"],
+ health:["Ask about your workouts and habits","How were my workouts this week?","Set a goal of 4 workouts a week"],
+ appts:["Ask about appointments","Find a time for a dentist visit next week","What's coming up?"],
+ briefs:["Ask about your briefs","What changed since yesterday?"],
+ profile:null};
+async function renderAsk(){
+  const cfg=ASK[currentView];$("#ask").classList.toggle("hidden",!cfg);if(!cfg)return;
+  $("#chatInput").placeholder=cfg[0];
+  let d;try{d=await api("/api/chat");}catch(e){return;}
+  const mine=d.transcript.filter(m=>(m.view||"today")===currentView).slice(-6);
+  const log=$("#askLog");
+  log.innerHTML=mine.map(m=>{
     if(m.role==="user")return `<div class="msg me">${esc(m.text)}</div>`;
     if(m.role==="error")return `<div class="msg err">${esc(m.text)}</div>`;
     const link=m.brief?`<p><button class="link" type="button" data-brief="${esc(m.brief)}">Saved in Briefs</button></p>`:"";
     return `<div class="msg bot">${stepsHtml(m.steps)}${md(m.text)}${link}</div>`;}).join("")+`<div id="liveSlot"></div>`;
+  log.classList.toggle("hidden",!mine.length&&!busy);
+  $("#askChips").innerHTML=mine.length?"":cfg.slice(1).map(q=>`<button class="chip" type="button">${esc(q)}</button>`).join("");
+  $$("#askChips .chip").forEach(c=>c.addEventListener("click",()=>sendChat(c.textContent)));
   $$("[data-brief]").forEach(b=>b.addEventListener("click",()=>{show("briefs");setTimeout(()=>openBrief(b.dataset.brief),150);}));
-  t.scrollTop=t.scrollHeight;
+  log.scrollTop=log.scrollHeight;
+  if(d.active_job&&!busy)followJob(d.active_job);
 }
-LOADERS.chat=guard(async()=>{const d=await api("/api/chat");renderTranscript(d.transcript);if(d.active_job&&!busy)followJob(d.active_job);});
+function stepsHtml(steps){
+  if(!steps||!steps.length)return"";
+  return `<details class="steps"><summary>${plural(steps.length,"step","steps")} taken</summary><ul>${steps.map(s=>"<li>"+esc(label(s))+"</li>").join("")}</ul></details>`;
+}
 function setBusy(b){busy=b;$("#sendBtn").disabled=b;$("#check").disabled=b;$("#checkLabel").textContent=b?"Working…":"Check now";}
 function liveView(events){
   const slot=$("#liveSlot");if(!slot)return;
+  $("#askLog").classList.remove("hidden");
   const seen=events.filter(e=>e.type==="tool").map(e=>label(e.tool));
   const q=events.filter(e=>e.type==="queued").length;
   const lines=[...new Set(seen)].slice(-5).map(s=>"<li>"+esc(s)+"</li>");
   if(q)lines.push("<li>Held "+plural(q,"item","items")+" for your OK</li>");
   slot.innerHTML=`<div class="msg live"><span class="pulse"></span>Working<ul>${lines.join("")}</ul></div>`;
-  $("#transcript").scrollTop=$("#transcript").scrollHeight;
+  $("#askLog").scrollTop=$("#askLog").scrollHeight;
 }
 async function followJob(id){
   setBusy(true);
@@ -538,24 +546,28 @@ async function followJob(id){
     await new Promise(r=>setTimeout(r,650));}}
   catch(e){toast(e.message);}
   setBusy(false);
-  if(currentView==="chat")await LOADERS.chat();await loadStatus();
+  await loadStatus();
+  if(LOADERS[currentView])await LOADERS[currentView]();  // the answer may have changed what this page shows
+  renderAsk();
 }
 async function sendChat(text){
-  text=(text||"").trim();if(!text||busy)return;
-  show("chat");$("#chatInput").value="";autoGrow();
-  try{const cur=await api("/api/chat");renderTranscript([...cur.transcript,{role:"user",text}]);
-    const {job_id}=await api("/api/chat",{method:"POST",body:{text}});followJob(job_id);}
-  catch(e){toast(e.message);await LOADERS.chat();await loadStatus();}
+  text=(text||"").trim();if(!text||busy||!ASK[currentView])return;
+  $("#chatInput").value="";autoGrow();$("#askChips").innerHTML="";
+  try{const cur=await api("/api/chat");
+    const mine=[...cur.transcript.filter(m=>(m.view||"today")===currentView).slice(-5),{role:"user",text}];
+    $("#askLog").classList.remove("hidden");
+    $("#askLog").innerHTML=mine.map(m=>m.role==="user"?`<div class="msg me">${esc(m.text)}</div>`:m.role==="error"?`<div class="msg err">${esc(m.text)}</div>`:`<div class="msg bot">${md(m.text)}</div>`).join("")+`<div id="liveSlot"></div>`;
+    const {job_id}=await api("/api/chat",{method:"POST",body:{text,view:currentView}});followJob(job_id);}
+  catch(e){toast(e.message);renderAsk();}
 }
 $("#chatForm").addEventListener("submit",e=>{e.preventDefault();sendChat($("#chatInput").value);});
 $("#chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat($("#chatInput").value);}});
-function autoGrow(){const t=$("#chatInput");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,180)+"px";}
+function autoGrow(){const t=$("#chatInput");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";}
 $("#chatInput").addEventListener("input",autoGrow);
 $("#check").addEventListener("click",async()=>{
-  if(busy)return;show("chat");
-  try{const cur=await api("/api/chat");renderTranscript([...cur.transcript,{role:"user",text:"Check now"}]);
-    const {job_id}=await api("/api/check",{method:"POST"});followJob(job_id);}
-  catch(e){toast(e.message);await LOADERS.chat();}
+  if(busy)return;show("today");
+  try{const {job_id}=await api("/api/check",{method:"POST"});await renderAsk();followJob(job_id);}
+  catch(e){toast(e.message);}
 });
 
 /* approvals */
@@ -613,8 +625,7 @@ $("#taskForm").addEventListener("submit",async e=>{
 
 /* money */
 LOADERS.money=guard(async()=>{
-  const [bu,al]=await Promise.all([api("/api/budget"),api("/api/alerts")]);
-  $("#moneyAlerts").innerHTML=al.alerts.filter(a=>a.area==="budget").map(alertRow).join("")+'<div style="height:14px"></div>';
+  const bu=await api("/api/budget");
   const g=bu.groups;
   if(!bu.latest){$("#moneySub").textContent="No spending yet. Import your Copilot export below.";$("#moneyMix").innerHTML="";$("#cats").innerHTML='<p class="muted">Once you import, your categories appear here and you can set a monthly limit on each.</p>';return;}
   $("#moneySub").textContent=new Date(bu.month+"-15").toLocaleString([],{month:"long",year:"numeric"})+", through "+bu.latest+".";
@@ -638,8 +649,7 @@ $("#csvFile").addEventListener("change",guard(async e=>{const f=e.target.files[0
 
 /* health */
 LOADERS.health=guard(async()=>{
-  const [he,al]=await Promise.all([api("/api/health"),api("/api/alerts")]);
-  $("#healthAlerts").innerHTML=al.alerts.filter(a=>a.area==="health").map(alertRow).join("")+'<div style="height:14px"></div>';
+  const he=await api("/api/health");
   $("#goals").innerHTML=he.goals.length?he.goals.map(g=>`<div class="goal"><div style="display:flex;justify-content:space-between;gap:10px"><strong>${esc(g.title)}</strong>
     <span class="muted small">${g.done} of ${g.target} ${esc(g.metric.replace("_"," "))} this ${esc(g.period)} <button class="link" data-rm="${g.id}" type="button">remove</button></span></div>
     <div class="bar" style="margin-top:8px"><i style="width:${Math.min(100,g.done/g.target*100)}%"></i></div></div>`).join("")
@@ -674,7 +684,7 @@ LOADERS.appts=guard(async()=>{
         ${a.booking_link?`<button class="btn small quiet" data-copy="${esc(a.booking_link)}" type="button">Copy booking link</button>`:""}
         ${a.status==="to_book"?`<button class="btn small" data-st="booked" data-id="${a.id}" type="button">I booked it</button>`:`<button class="btn small quiet" data-st="done" data-id="${a.id}" type="button">Done</button>`}
         <button class="link small" data-st="cancelled" data-id="${a.id}" type="button">Cancel</button></div></div>`).join("")
-    :'<p class="muted">Nothing scheduled. Ask in Chat, for example: "Find a time for a dentist visit next week".</p>';
+    :'<p class="muted">Nothing scheduled. Ask below, for example: "Find a time for a dentist visit next week".</p>';
   $$("[data-st]").forEach(b=>b.addEventListener("click",guard(async()=>{await api("/api/appointments/"+b.dataset.id,{method:"POST",body:{status:b.dataset.st}});await LOADERS.appts();await loadStatus();})));
   $$("[data-copy]").forEach(b=>b.addEventListener("click",()=>{navigator.clipboard.writeText(b.dataset.copy).then(()=>toast("Link copied. Paste it into your browser."),()=>toast("Couldn't copy."));}));
 });
@@ -705,7 +715,8 @@ $("#quit").addEventListener("click",async e=>{
   try{await api("/api/quit",{method:"POST"});}catch(err){}
   $("#stopped").classList.add("on");});
 
-show("today");setInterval(()=>{if(!busy){loadStatus();}},12000);
+LOADERS.today=async()=>{await loadTodayOnly();await Promise.all(["approvals","tasks","money","health","appts"].map(k=>LOADERS[k]()));};
+show("today");setInterval(async()=>{if(busy)return;await loadStatus();if(status.busy&&status.active_job){followJob(status.active_job);}},12000);
 </script>
 </body>
 </html>

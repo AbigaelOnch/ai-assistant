@@ -82,6 +82,10 @@ python -m assistant connect     sign in and test each source
 On Windows, `run_windows.bat` opens the text chat, and `run_windows.bat run`,
 `approvals` or `connect` run the other commands.
 
+## Everything on one page
+
+The app opens to one page: **Needs your action** and **What's new** at the top, then Waiting for you, Tasks, Money, Health and Appointments below. A box at the bottom lets you ask about anything. While the app is open it checks your accounts by itself every hour (change with `AUTO_CHECK_MINUTES` in `.env`; `0` turns it off). Each check uses a few cents of Claude credit.
+
 ## Money, health and appointments
 
 The window has a **Today** page (what needs you, at a glance) and pages for Money, Health and Appointments. Everything here is stored on your computer in `data/assistant.db`.
